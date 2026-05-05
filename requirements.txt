@@ -1,5 +1,9 @@
-yfinance
-pandas
-psycopg2-binary
+fastapi
+uvicorn
 sqlalchemy
+psycopg2-binary
+pandas
+numpy
+yfinance
+google-generativeai
 python-dotenv

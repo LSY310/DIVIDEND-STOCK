@@ -55,3 +55,35 @@ Issue: SQLAlchemy 2.0 버전의 ObjectNotExecutableError 발생
 
     수치 데이터를 '인사이트'로 변환하는 자동화 파이프라인 구축 완료.
 
+## 🗓️ Day 3 - Gemini LLM 연동 및 API 서비스 레이어 통합
+### 🔍 목표
+    수집된 Raw Data를 정제하여 투자 인사이트를 위한 핵심 재무 지표(CAGR, 연속성) 산출
+
+### 🛠️ 실행 및 해결 과정
+1. AI Insight: Gemini API 기반 리포터 구현
+    Persona Prompting: Gemini 1.5 Flash 모델에 '배당 성장주 전문 퀀트 분석가' 페르소나를 부여하여 단순 수치 나열이 아닌 정성적 해석(배당 신뢰도, 리스크 평가) 로직 구현.
+
+    Metrics Integration: Day 2에서 산출한 CAGR($$CAGR = (\frac{V_{final}}{V_{begin}})^{\frac{1}{n-1}} - 1$$)과 연속 성장 연수 데이터를 Prompt에 주입하여 데이터 근거형 답변 유도.
+
+2. Backend: FastAPI 서비스 레이어 통합
+    Pipeline Orchestration: Collector(수집) -> Analyzer(분석) -> AIReporter(해석)로 이어지는 전체 워크플로우를 /analyze/{ticker} 하나의 API로 통합.
+
+    Async/Await: LLM API 호출 및 DB I/O 작업 시 비동기 처리를 적용하여 응답 지연 시간 최적화.
+
+3. Infrastructure: 환경 변수 및 의존성 관리
+    python-dotenv를 활용해 API Key 및 DB URL 등 민감 정보를 분리 관리.
+
+    docker-compose 설정을 최종 점검하여 db 컨테이너와 앱 환경 간의 네트워크 통신 확인.
+
+### ⚠️ Trouble Shooting: LLM의 금융 도메인 세이프티 필터(Safety Settings)로 인한 응답 거부
+    문제: 특정 종목에 대해 '매수' 의견을 요청할 경우, Gemini의 안전 설정에 의해 응답이 차단되거나 가이드라인 준수 문구만 출력됨.
+
+    원인: 금융 투자 조언에 대한 AI 모델의 보수적인 내부 정책 때문으로 판단.
+
+    해결: Prompt를 "투자 권유"가 아닌 "데이터 기반 분석 보고서 작성"으로 목적을 명확히 수정하고, HarmCategory 설정을 조정하여 분석의 자율성을 확보함. 또한 결과값에 "본 리포트는 데이터 분석 결과일 뿐이며 실제 투자의 책임은 본인에게 있음"이라는 면책 조항을 자동 포함하도록 설계
+
+### 💡 핵심 성과
+
+    인사이트 자동화: 단순한 데이터 수집기를 넘어, 수치($8.7\%$)를 문장("과거 평균 대비 높은 성장세로 배당 신뢰도가 높음")으로 변환하는 End-to-End 파이프라인 완성.
+
+    확장성 확보: 신규 종목 티커만 입력하면 DB 적재부터 AI 분석까지 단 5초 내외로 수행되는 고성능 분석 환경 구축.

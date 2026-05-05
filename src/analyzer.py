@@ -50,12 +50,13 @@ class DividendAnalyzer:
         yearly_df['is_growth'] = yearly_df['dividend'].diff() > 0
         consecutive_growth = (yearly_df['is_growth'] == True).sum()
 
+        # (명시적 형변환 추가)
         return {
             "ticker": ticker_symbol,
-            "cagr_5y": round(cagr, 2) if cagr else "N/A",
-            "consecutive_years": consecutive_growth,
-            "last_full_year_div": round(float(clean_yearly['dividend'].iloc[-1]), 4) if not clean_yearly.empty else 0
-        }
+            "cagr_5y": float(round(cagr, 2)) if cagr is not None else "N/A",
+            "consecutive_years": int(consecutive_growth), # int()로 감싸서 Python native int로 변환
+            "last_full_year_div": float(clean_yearly['dividend'].iloc[-1]) if not clean_yearly.empty else 0.0
+}
 
 if __name__ == "__main__":
     analyzer = DividendAnalyzer()
