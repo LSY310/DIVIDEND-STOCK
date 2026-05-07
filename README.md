@@ -87,3 +87,49 @@ Issue: SQLAlchemy 2.0 버전의 ObjectNotExecutableError 발생
     인사이트 자동화: 단순한 데이터 수집기를 넘어, 수치($8.7\%$)를 문장("과거 평균 대비 높은 성장세로 배당 신뢰도가 높음")으로 변환하는 End-to-End 파이프라인 완성.
 
     확장성 확보: 신규 종목 티커만 입력하면 DB 적재부터 AI 분석까지 단 5초 내외로 수행되는 고성능 분석 환경 구축.
+
+## Day 4 - 캐싱 시스템 도입 및 다중 분석 UI 구축
+### 🔍 목표
+
+    반복적인 API 호출 비용 절감을 위한 AI 리포트 캐싱 구현.
+
+    여러 종목을 한 번에 분석하는 다중 비교(Compare) 엔드포인트 추가.
+
+    Streamlit을 활용하여 백엔드 API와 연동된 시각화 대시보드(UI) 제작.
+
+### 🛠️ 실행 및 해결 과정
+1. 1단계: PostgreSQL 기반 AI 리포트 캐싱
+    ai_report_cache 테이블을 설계하고, 동일 티커 조회 시 24시간 이내 데이터가 있으면 Gemini API 호출 없이 DB 값을 반환하도록 로직 구현.
+
+    ON CONFLICT (ticker) DO UPDATE 구문을 사용하여 리포트 최신화(Upsert) 처리.
+
+2. 2단계: 다중 종목 분석 및 에러 핸들링
+    쉼표(,)로 구분된 티커 리스트를 파싱하여 순차적으로 분석하는 /analyze/compare 엔드포인트 개발.
+
+    yfinance의 Python 3.13 호환성 이슈(AttributeError)를 해결하기 위해 ticker.history()를 통한 데이터 강제 로드(Force-Loading) 방식 적용.
+
+3. 3단계: Streamlit UI 연결 및 시각화
+    requests 라이브러리를 통해 FastAPI 백엔드와 통신하는 전용 대시보드(dashboard.py) 구축.
+
+    st.metric과 st.expander를 활용하여 각 종목의 CAGR, 연속 성장 연수, AI 인사이트를 카드 형태로 가독성 있게 배치.
+
+### ⚠️ Trouble Shooting
+1. 엔드포인트 우선순위 문제 : /analyze/compare와 /analyze/{ticker} 경로가 겹쳐 compare 자체를 티커로 인식하는 현상 발생.
+
+    Solution: FastAPI 라우팅 선언 순서를 변경하여 특수 경로(compare)에 높은 우선순위 부여.
+
+2. CORS(Cross-Origin Resource Sharing) 에러 : 서로 다른 포트(8000 vs 8501)를 사용하는 프론트와 백엔드 간 통신 차단.
+
+    Solution: FastAPI에 CORSMiddleware를 추가하여 모든 로컬 도메인의 접근 허용.
+
+3. yfinance 라이브러리 내부 버그 : _dividends 속성 부재로 인한 AttributeError 발생.
+
+    Solution: ticker.dividends 대신 ticker.history(period="max")를 먼저 호출하여 객체 내부를 수동으로 초기화하는 우회 로직 적용.
+
+### 💡 핵심 성과
+
+    Backend: 캐싱 기능을 포함한 안정적인 배당 분석 REST API.
+
+    Frontend: 사용자 친화적인 실시간 배당 성장 분석 대시보드.
+
+    Efficiency: 캐시 도입을 통해 반복 조회 시 응답 속도 약 30배 개선 및 API 호출 비용 절감.

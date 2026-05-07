@@ -22,6 +22,14 @@ def create_tables():
         dividend FLOAT,
         UNIQUE(ticker, date) -- 중복 데이터 방지
     );
+
+    CREATE TABLE IF NOT EXISTS ai_report_cache (
+        id SERIAL PRIMARY KEY,
+        ticker VARCHAR(10) UNIQUE,
+        report_text TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
     """
 
     engine = get_engine()
