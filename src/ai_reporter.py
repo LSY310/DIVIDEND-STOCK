@@ -1,3 +1,4 @@
+# Gemini 모델을 사용해 수치 데이터를 텍스트 인사이트로 변환
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
@@ -18,7 +19,8 @@ class AIReporter:
         - 티커: {metrics['ticker']}
         - 5년 평균 배당 성장률(CAGR): {metrics['cagr_5y']}%
         - 연속 배당 성장 연수: {metrics['consecutive_years']}년
-        - 최근 연간 배당금: ${metrics['last_full_year_div']}
+        - 배당 성향: {metrics['payout_ratio']}%
+        - 1년 총 수익률: {metrics['total_return_1y']}%
 
         [요구 사항]
         1. 배당 성장률이 5% 이상인 경우 긍정적으로, 0% 이하인 경우 보수적으로 평가할 것.

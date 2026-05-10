@@ -1,4 +1,4 @@
-import psycopg2
+#PostgreSQL 연결 설정과 프로젝트에 필요한 테이블을 자동으로 생성하는 로직
 from sqlalchemy import create_engine,text
 import os
 from dotenv import load_dotenv
@@ -13,14 +13,14 @@ def get_engine():
     return create_engine(DB_URL)
 
 def create_tables():
-    # 데이터를 담을 테이블 만들기
+    # 배당 이력 저장용과 AI 리포트 캐시용 테이블 생성
     query = """
     CREATE TABLE IF NOT EXISTS dividend_history (
         id SERIAL PRIMARY KEY,
         ticker VARCHAR(10),
         date TIMESTAMP,
         dividend FLOAT,
-        UNIQUE(ticker, date) -- 중복 데이터 방지
+        UNIQUE(ticker, date) -- 동일 날짜 중복 데이터 방지
     );
 
     CREATE TABLE IF NOT EXISTS ai_report_cache (
@@ -37,4 +37,5 @@ def create_tables():
     with engine.connect() as conn:
         conn.execute(text(query))  # text(query)로 감싸기
         conn.commit()             # 변경 사항 확정(Commit)
-    print("✅ DB 테이블 생성 완료!")
+
+    print("DB 테이블 생성 완료")
